@@ -65,7 +65,10 @@ func (s *txnSuite) TestRunTransaction(c *gc.C) {
 		Assert: txn.DocMissing,
 		Insert: doc,
 	}}
-	err := s.txnRunner.RunTransaction(ops, 0)
+	err := s.txnRunner.RunTransaction(&jujutxn.Transaction{
+		Ops:     ops,
+		Attempt: 0,
+	})
 	c.Assert(err, gc.IsNil)
 	var found simpleDoc
 	err = s.collection.FindId("1").One(&found)
@@ -102,7 +105,10 @@ func (s *txnSuite) setDocName(c *gc.C, id, name string) {
 		Assert: txn.DocExists,
 		Update: bson.D{{"$set", bson.D{{"name", name}}}},
 	}}
-	err := s.txnRunner.RunTransaction(ops, 0)
+	err := s.txnRunner.RunTransaction(&jujutxn.Transaction{
+		Ops:     ops,
+		Attempt: 0,
+	})
 	c.Assert(err, gc.IsNil)
 }
 
@@ -114,7 +120,10 @@ func (s *txnSuite) insertDoc(c *gc.C, id, name string) {
 		Assert: txn.DocMissing,
 		Insert: doc,
 	}}
-	err := s.txnRunner.RunTransaction(ops, 0)
+	err := s.txnRunner.RunTransaction(&jujutxn.Transaction{
+		Ops:     ops,
+		Attempt: 0,
+	})
 	c.Assert(err, gc.IsNil)
 }
 
@@ -316,10 +325,10 @@ func (s *txnSuite) TestRunFailureAlwaysUnexpectedMessage(c *gc.C) {
 }
 
 func (s *txnSuite) TestRunTransactionObserver(c *gc.C) {
-	var calls []jujutxn.ObservedTransaction
+	var calls []jujutxn.Transaction
 	clock := testclock.NewClock(time.Now())
 	runner := jujutxn.NewRunner(jujutxn.RunnerParams{
-		RunTransactionObserver: func(txn jujutxn.ObservedTransaction) {
+		RunTransactionObserver: func(txn jujutxn.Transaction) {
 			calls = append(calls, txn)
 		},
 		Clock: clock,
